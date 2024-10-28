@@ -24,7 +24,7 @@ selected_price = st.sidebar.slider("Price Range", price_min, price_max, price_ma
 df_books = df_top100_books[df_top100_books["book price"] <= selected_price]
 total_books = len(df_books)
 avg_price = df_books["book price"].mean()
-avg_rating = df_books["average rating"].mean()
+avg_rating = df_books["rating"].mean()  # Updated to match the correct column name
 
 # Display metrics
 st.sidebar.metric("Total Books", total_books)
@@ -40,11 +40,11 @@ fig_year = px.bar(df_books, x="year of publication", title="Books Count by Year 
 fig_price = px.histogram(df_books, x="book price", title="Book Price Distribution")
 
 # Ratings distribution pie chart
-fig_ratings = px.pie(df_books, names="average rating", title="Distribution of Ratings")
+fig_ratings = px.pie(df_books, names="rating", title="Distribution of Ratings")  # Updated to match the correct column name
 
 # Price vs Rating scatter plot
-fig_scatter = px.scatter(df_books, x="book price", y="average rating", 
-                         size="number of reviews", color="average rating",
+fig_scatter = px.scatter(df_books, x="book price", y="rating", 
+                         size="Rank", color="rating",  # Updated to use "rating" column
                          title="Price vs. Rating Scatter Plot")
 
 # Display charts in columns
