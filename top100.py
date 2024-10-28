@@ -1,6 +1,9 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+import plotly.graph_objects as go
+import seaborn as sns
+import matplotlib.pyplot as plt
 
 # Set Streamlit page configuration
 st.set_page_config(page_title="Top 100 Best-Selling Books on Amazon", layout="wide")
@@ -37,42 +40,70 @@ st.dataframe(df_books)
 # Visualization Section
 st.write("### Data Visualizations")
 
-# 1. Books by Price Range
-st.write("#### Books by Price Range")
-st.write("This bar chart shows the number of books available within different price ranges.")
-bins = [0, 10, 20, 30, 40, 50, price_max]
-labels = ["$0-10", "$10-20", "$20-30", "$30-40", "$40-50", f"${price_max}+"]
+# Updated Visualization 1: Average Price and Rating per Year
+st.write("#### Average Price and Rating per Year")
+st.write("This combined line and bar chart shows the trend in average price and rating over the years of publication.")
+avg_data_year = df_books.groupby("year of publication").agg({"book price": "mean", "rating": "mean"})
+fig_avg_year = go.Figure()
+fig_avg_year.add_trace(go.Bar(x=avg_data_year.index, y=avg_data_year["book price"],
+                              name="Average Price", marker_color="blue"))
+fig_avg_year.add_trace(go.Scatter(x=avg_data_year.index, y=avg_data_year["rating"], 
+                                  name="Average Rating", mode="lines+markers", marker_color="red"))
+fig_avg_year.update_layout(title="Average Price and Rating per Year", 
+                           xaxis_title="Year", yaxis_title="Value")
+st.plotly_chart(fig_avg_year, use_container_width=True)
 
-df_books["price range"] = pd.cut(df_books["book price"], bins=bins, labels=labels)
-fig_price_range = px.bar(df_books["price range"].value_counts().sort_index(),
-                         title="Books by Price Range", labels={"index": "Price Range", "value": "Count"})
-st.plotly_chart(fig_price_range, use_container_width=True)
+# 2. Book Price Distribution
+st.write("#### Book Price Distribution")
+st.write("This histogram displays the distribution of book prices within the selected range.")
+fig_price = px.histogram(df_books, x="book price", title="Book Price Distribution")
+st.plotly_chart(fig_price, use_container_width=True)
 
-# 2. Top 10 Most Expensive Books
-st.write("#### Top 10 Most Expensive Books")
-st.write("This bar chart lists the 10 most expensive books in the dataset.")
-top_expensive_books = df_books.nlargest(10, "book price")[["book title", "book price"]]
-fig_top_expensive = px.bar(top_expensive_books, x="book title", y="book price", title="Top 10 Most Expensive Books",
-                           labels={"book title": "Book Title", "book price": "Price"})
-st.plotly_chart(fig_top_expensive, use_container_width=True)
+# 3. Distribution of Ratings
+st.write("#### Distribution of Ratings")
+st.write("This pie chart shows the proportion of books within each rating level.")
+fig_ratings = px.pie(df_books, names="rating", title="Distribution of Ratings")
+st.plotly_chart(fig_ratings, use_container_width=True)
 
-# 3. Books by Genre and Year
-st.write("#### Books by Genre and Year")
-st.write("This heatmap shows the distribution of book genres across different years.")
-df_genre_year = df_books.groupby(["year of publication", "genre"]).size().reset_index(name="count")
-fig_genre_year = px.density_heatmap(df_genre_year, x="year of publication", y="genre", z="count",
-                                    title="Books by Genre and Year", color_continuous_scale="Viridis",
-                                    labels={"year of publication": "Year", "genre": "Genre", "count": "Count"})
-st.plotly_chart(fig_genre_year, use_container_width=True)
+# 4. Price vs Rating Scatter Plot
+st.write("#### Price vs. Rating")
+st.write("This scatter plot shows the relationship between book price and average rating, with bubble sizes representing book rank.")
+fig_scatter = px.scatter(df_books, x="book price", y="rating", 
+                         size="Rank", color="rating",
+                         title="Price vs. Rating Scatter Plot")
+st.plotly_chart(fig_scatter, use_container_width=True)
 
-# 4. Average Rating per Genre
-st.write("#### Average Rating per Genre")
-st.write("This bar chart compares the average rating across different book genres.")
-avg_rating_genre = df_books.groupby("genre")["rating"].mean().sort_values()
+# 5. Top Authors by Book Count
+st.write("#### Top Authors by Book Count")
+st.write("This bar chart highlights the authors with the most books in the top 100 list.")
+top_authors = df_books["author"].value_counts().head(10)
+fig_authors = px.bar(top_authors, x=top_authors.index, y=top_authors.values, 
+                     labels={"x": "Author", "y": "Number of Books"}, 
+                     title="Top Authors by Book Count")
+st.plotly_chart(fig_authors, use_container_width=True)
+
+# 6. Genre Distribution
+st.write("#### Genre Distribution")
+st.write("This pie chart displays the distribution of different genres in the top 100 books.")
+fig_genre = px.pie(df_books, names="genre", title="Genre Distribution")
+st.plotly_chart(fig_genre, use_container_width=True)
+
+# 7. Top Genres by Average Rating
+st.write("#### Top Genres by Average Rating")
+st.write("This bar chart shows the average rating across different genres.")
+avg_rating_genre = df_books.groupby("genre")["rating"].mean().sort_values(ascending=False)
 fig_avg_rating_genre = px.bar(avg_rating_genre, x=avg_rating_genre.index, y=avg_rating_genre.values,
                               labels={"x": "Genre", "y": "Average Rating"},
-                              title="Average Rating per Genre")
+                              title="Top Genres by Average Rating")
 st.plotly_chart(fig_avg_rating_genre, use_container_width=True)
+
+# 8. Correlation Matrix Heatmap
+st.write("#### Correlation Matrix")
+st.write("This heatmap displays the correlation between numerical variables, showing relationships between price, rating, and rank.")
+corr_matrix = df_books[["book price", "rating", "Rank"]].corr()
+fig_corr = plt.figure(figsize=(8, 6))
+sns.heatmap(corr_matrix, annot=True, cmap="Blues", fmt=".2f", square=True)
+st.pyplot(fig_corr)
 
 # Footer with credits
 st.markdown("Created with ❤️ and maintained by [Murilo Krominski](https://murilokrominski.github.io/autor.htm).")
