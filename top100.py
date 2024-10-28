@@ -1,12 +1,13 @@
-import streamlit as st
-import pandas as pd
-import plotly.express as px
-import plotly.graph_objects as go
 
-# Page configuration for minimal style
+import streamlit as st  # Importing the Streamlit library for creating web applications
+import pandas as pd     # Importing pandas for data manipulation and analysis
+import plotly.express as px  # Importing Plotly Express for data visualization
+import plotly.graph_objects as go  # Importing Plotly Graph Objects for more customizable plots
+
+# Page configuration for a minimal style and title "Trending Books"
 st.set_page_config(page_title="Trending Books", page_icon="📚", layout="wide")
 
-# Apply dark theme configuration
+# Applying a custom dark theme configuration for Streamlit app
 st.markdown("""
     <style>
         /* Background color for the main container */
@@ -18,72 +19,73 @@ st.markdown("""
         /* Sidebar style */
         .sidebar .sidebar-content {
             background-color: #333;
-            color: #e0e0e0;
         }
-        /* Style for tables and dataframes */
-        .dataframe {
-            background-color: #1e1e1e;
-            color: #d3d3d3;
-        }
-        /* Style for text and headers */
-        h1, h2, h3, h4, h5, h6 {
-            color: #e0e0e0;
+        /* Header title styling */
+        .css-18e3th9 {
+            color: #FFF;
+            font-size: 2rem;
         }
     </style>
-    """, unsafe_allow_html=True)
+"", unsafe_allow_html=True)
 
-# Load datasets
-df_reviews = pd.read_csv("dataset/customer reviews.csv")
-df_top100_books = pd.read_csv("dataset/Top-100 Trending Books.csv")
+# Title for the Streamlit app displayed at the top of the page
+st.title("Top 100 Trending Books")
 
-# Slider settings for book price range
-price_max = df_top100_books["book price"].max()
-price_min = df_top100_books["book price"].min()
+# Uploading a CSV file containing data about books
+uploaded_file = st.file_uploader("Choose a file", type="csv")
 
-# Sidebar for filters
-st.sidebar.title("Filters")
-max_price = st.sidebar.slider("Maximum Price", float(price_min), float(price_max), float(price_max), format="$ %.2f")
+# Checking if the file is uploaded
+if uploaded_file is not None:
+    # Reading the uploaded CSV file into a pandas DataFrame
+    df = pd.read_csv(uploaded_file)
 
-# Filter the dataset based on price
-df_books = df_top100_books[df_top100_books["book price"] <= max_price]
+    # Displaying the first 10 rows of the DataFrame in the app
+    st.write("Preview of the data:")
+    st.write(df.head(10))
 
-# Display the filtered dataframe
-st.markdown("### Books within the selected price range")
-st.dataframe(df_books.style.set_properties(**{'background-color': '#1e1e1e', 'color': '#d3d3d3'}))
+    # Checking if the DataFrame has necessary columns for analysis
+    if 'Rating' in df.columns and 'Price' in df.columns:
+        # Creating a scatter plot with Plotly Express
+        fig = px.scatter(df, x="Rating", y="Price", color="Genre", title="Rating vs Price by Genre")
+        # Displaying the scatter plot in the app
+        st.plotly_chart(fig)
 
-# Bar chart: Count of books by publication year
-fig_bar = go.Figure(data=[
-    go.Bar(x=df_books["year of publication"].value_counts().sort_index().index,
-           y=df_books["year of publication"].value_counts().sort_index(),
-           marker_color="#4CAF50")
-])
-fig_bar.update_layout(title="Count of Books by Year of Publication",
-                      paper_bgcolor="#222", plot_bgcolor="#222",
-                      font_color="#e0e0e0", xaxis_title="Year of Publication", yaxis_title="Number of Books")
+    # If required columns are missing, display an error message
+    else:
+        st.error("The file must contain 'Rating' and 'Price' columns.")
 
-# Histogram: Distribution of book prices
-fig_hist = px.histogram(df_books, x="book price", nbins=20, title="Distribution of Book Prices")
-fig_hist.update_layout(paper_bgcolor="#222", plot_bgcolor="#222",
-                       font_color="#e0e0e0", xaxis_title="Book Price", yaxis_title="Count")
-
-# Column layout for charts
-col1, col2 = st.columns(2)
-
-with col1:
-    st.plotly_chart(fig_bar, use_container_width=True)
-
-with col2:
-    st.plotly_chart(fig_hist, use_container_width=True)
-
-# Sidebar with highlighted metrics
-st.sidebar.markdown("### Key Data")
-st.sidebar.metric("Average Book Price", f"$ {df_books['book price'].mean():.2f}")
-st.sidebar.metric("Total Number of Books", df_books.shape[0])
-
-# Footer with dataset reference
+# HTML for author information and social links
 st.markdown("""
-    <hr style="border:1px solid #555;">
-    <footer style="text-align: center; color: #888;">
-        Built with Streamlit by MuriloKrominski | Dataset: <a href="https://www.kaggle.com/datasets/anshtanwar/top-200-trending-books-with-reviews" target="_blank" style="color: #4CAF50;">Kaggle - Top 200 Trending Books</a>
-    </footer>
-    """, unsafe_allow_html=True)
+    <center>
+    <a href="https://murilokrominski.github.io/autor.htm">
+    <img src="https://murilokrominski.github.io/media/avatar.jpeg" alt="autor" style="max-width: 160px; max-height: 160px; width: auto; height: auto;">
+    </a>
+    <br>
+    By <a href="https://murilokrominski.github.io/autor.htm">Murilo Krominski</a>
+    <br>
+    <a href="https://murilokrominski.github.io/autor.htm">
+    <img src="https://img.shields.io/badge/https://murilokrominski.github.io/autor.htm-blue.svg" alt="Autor">
+    </a>
+    <a href="https://murilokrominski.github.io/">
+    <img src="https://img.shields.io/badge/Projects - Repository β(PUBLIC)-orange.svg" alt="Repository β(PUBLIC)">
+    </a>
+    <br>
+    <a href="https://t.me/murilokrominski">
+    <img src="https://img.shields.io/badge/Telegram-1D9BF0?style=for-the-badge&logo=telegram&logoColor=E5F3FF" height="20">
+    </a>
+    <a href="https://wa.me/+5511970388634">
+    <img src="https://img.shields.io/badge/WhatsApp-22BB78?style=for-the-badge&logo=whatsapp&logoColor=E8F6EE" height="20">
+    </a>
+    <a href="https://www.threads.net/@murilokrominski">
+    <img src="https://img.shields.io/badge/Threads-565656?style=for-the-badge&logo=threads&logoColor=D8D8D8" height="20">
+    </a>
+    <a href="https://www.instagram.com/murilokrominski">
+    <img src="https://img.shields.io/badge/Instagram-D74476?style=for-the-badge&logo=instagram&logoColor=FCE3EC" height="20">
+    </a>
+    <a href="mailto:murilokr@gmail.com">
+    <img src="https://img.shields.io/badge/Gmail-DC4E41?style=for-the-badge&logo=gmail&logoColor=FDEAE8" height="20">
+    </a>
+    <br>
+    <p><strong>Hello World!</strong><img src="media/Hi.gif?raw=true" width="30px"></p>
+    </center>
+"", unsafe_allow_html=True)
